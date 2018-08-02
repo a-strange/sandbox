@@ -135,7 +135,7 @@ def capture_address_element(regex_object, full_address):
     full_address = normalise_address(full_address)
     capture_groups = regex_object.search(full_address)
     if capture_groups:
-        return capture_groups[0]
+        return capture_groups.group(0)
     return ''
 
 
