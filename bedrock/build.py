@@ -8,7 +8,7 @@ from google.cloud import storage
 import pandas as pd
 import pkg_resources
 
-from features import build_features
+from features import build_features, get_claim_amounts, get_claim_counts
 
 CONFIG_PATH = 'config.json'
 
@@ -44,16 +44,18 @@ def _get_pickle_file(path: str,
     return df
 
 
-def build_models(policies: pd.DataFrame,
-                 claims: pd.DataFrame,
-                 test: pd.DataFrame,
-                 config: Dict[str, str]) -> None:
+def run_models(policies: pd.DataFrame,
+               claims: pd.DataFrame,
+               test: pd.DataFrame,
+               config: Dict[str, str]) -> None:
     """
     With the loaded datasets, run the complete process of model building
     for each of SLM, GLM and MLM.
     """
     policies = build_features(policies)
-    print(policies.head())
+    averages, totals = get_claim_amounts(policies, claims)
+    counts = get_claim_counts(policies, claims)
+    print(policies.head(), averages.head(), totals.head(), counts.head())
 
 
 def main() -> None:
@@ -82,7 +84,7 @@ def main() -> None:
                             client,
                             config['bucket'])
 
-    build_models(policies, claims, test, config)
+    run_models(policies, claims, test, config)
 
 
 if __name__ == '__main__':
