@@ -21,7 +21,7 @@ SOURCE_FILES = {
 
 
 def _load_config() -> Dict[str, str]:
-    path = pkg_resources(__name__, CONFIG_PATH)
+    path = pkg_resources.resource_filename(__name__, CONFIG_PATH)
     with open(path, 'r') as f:
         return json.load(f)
 
@@ -53,9 +53,10 @@ def run_models(policies: pd.DataFrame,
     for each of SLM, GLM and MLM.
     """
     policies = build_features(policies)
-    averages, totals = get_claim_amounts(policies, claims)
-    counts = get_claim_counts(policies, claims)
-    print(policies.head(), averages.head(), totals.head(), counts.head())
+    grouped = claims.groupby('pol_id')
+    averages, totals = get_claim_amounts(policies, grouped)
+    counts = get_claim_counts(policies, grouped)
+    print(policies.head(), averages.value_counts(), totals.value_counts(), counts.value_counts())
 
 
 def main() -> None:
