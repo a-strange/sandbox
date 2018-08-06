@@ -8,6 +8,8 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     Given a dataframe of policies, modify and produce the data to form
     the desired set of feature columns.
     """
+    drop_cols = {'insured'}
+
     # Convert year variable to int. Formatting year like this was mean.
     df['year_built'] = (df['year_built']
                         .str.extract(r'year\:([0-9]{4})')
@@ -18,7 +20,9 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
     # Convert categorical trade column to binary flags.
     df = convert_categorical_column(df, 'trade')
-    return df
+
+    feature_cols = set(df.columns)
+    return df[feature_cols.difference(drop_cols)]
 
 
 def convert_categorical_column(df: pd.DataFrame, col: str) -> pd.DataFrame:
@@ -48,11 +52,11 @@ def get_claim_amounts(policies: pd.DataFrame,
     totals = grouped_claims['claim_amount'].sum()
     averages = totals / grouped_claims['claim_amount'].count()
 
-    totals = policies.join(totals, on='pol_id')
+    totals = policies.join(totals)
     totals = totals.drop_duplicates('pol_id')['claim_amount']
     totals.fillna(0.0, inplace=True)
 
-    averages = policies.join(averages, on='pol_id')
+    averages = policies.join(averages)
     averages = averages.drop_duplicates('pol_id')['claim_amount']
     averages.fillna(0.0, inplace=True)
 

@@ -9,6 +9,7 @@ import pandas as pd
 import pkg_resources
 
 from features import build_features, get_claim_amounts, get_claim_counts
+from models import evaluate_slm
 
 CONFIG_PATH = 'config.json'
 
@@ -46,17 +47,19 @@ def _get_pickle_file(path: str,
 
 def run_models(policies: pd.DataFrame,
                claims: pd.DataFrame,
-               test: pd.DataFrame,
+               testing: pd.DataFrame,
                config: Dict[str, str]) -> None:
     """
     With the loaded datasets, run the complete process of model building
     for each of SLM, GLM and MLM.
     """
     policies = build_features(policies)
+    testing = build_features(testing)
     grouped = claims.groupby('pol_id')
+    # Currently compute both averages and totals.
     averages, totals = get_claim_amounts(policies, grouped)
     counts = get_claim_counts(policies, grouped)
-    print(policies.head(), averages.value_counts(), totals.value_counts(), counts.value_counts())
+    evaluate_slm(policies, counts, averages, testing)
 
 
 def main() -> None:
