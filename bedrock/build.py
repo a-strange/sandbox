@@ -4,9 +4,11 @@ import os
 import pickle
 from typing import Dict
 
-import pandas as pd
-
 from google.cloud import storage
+import pandas as pd
+import pkg_resources
+
+from features import build_features
 
 CONFIG_PATH = 'config.json'
 
@@ -19,17 +21,19 @@ SOURCE_FILES = {
 
 
 def _load_config() -> Dict[str, str]:
-    with open(CONFIG_PATH, 'r') as f:
+    path = pkg_resources(__name__, CONFIG_PATH)
+    with open(path, 'r') as f:
         return json.load(f)
 
 
-def get_pickle_file(path: str,
-                    client: storage.Client,
-                    bucket: str) -> pd.DataFrame:
+def _get_pickle_file(path: str,
+                     client: storage.Client,
+                     bucket: str) -> pd.DataFrame:
     """
     Retrieve a pickle file from the target GCS bucket and convert to
     DataFrame.
     """
+    path = os.path.join(SOURCE_PATH, path)
     bucket = client.get_bucket(bucket)
     blob = bucket.blob(path)
     df_io = io.BytesIO()
@@ -38,6 +42,18 @@ def get_pickle_file(path: str,
     df = pickle.load(df_io)
     df_io.close()
     return df
+
+
+def build_models(policies: pd.DataFrame,
+                 claims: pd.DataFrame,
+                 test: pd.DataFrame,
+                 config: Dict[str, str]) -> None:
+    """
+    With the loaded datasets, run the complete process of model building
+    for each of SLM, GLM and MLM.
+    """
+    policies = build_features(policies)
+    print(policies.head())
 
 
 def main() -> None:
@@ -55,11 +71,18 @@ def main() -> None:
     """
     config = _load_config()
     client = storage.Client(project=config['project'])
-    policies = get_pickle_file(os.path.join(SOURCE_PATH,
-                                            SOURCE_FILES['policies']),
-                               client,
-                               config['bucket'])
-    print(policies.head())
+
+    policies = _get_pickle_file(SOURCE_FILES['policies'],
+                                client,
+                                config['bucket'])
+    claims = _get_pickle_file(SOURCE_FILES['claims'],
+                              client,
+                              config['bucket'])
+    test = _get_pickle_file(SOURCE_FILES['test'],
+                            client,
+                            config['bucket'])
+
+    build_models(policies, claims, test, config)
 
 
 if __name__ == '__main__':
