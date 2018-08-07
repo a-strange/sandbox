@@ -1,6 +1,6 @@
 import io
 import json
-import os
+import logging
 import pickle
 from typing import Dict
 
@@ -19,6 +19,18 @@ SOURCE_FILES = {
     'claims': 'train_claims.pkl',
     'test': 'test_policies.pkl'
 }
+SUBMISSION_PATH = 'submissions'
+SUBMISSION_FILES = {
+    'slm': 'astrange-LM-01Vanilla.pkl',
+    'glm': 'astrange-GLM-01Vanilla.pkl',
+    'mlm': 'astrange-ML-01Vanilla.pkl'
+}
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s: %(message)s',
+)
+logger = logging.getLogger(__name__)
 
 
 def _load_config() -> Dict[str, str]:
@@ -34,7 +46,8 @@ def _get_pickle_file(path: str,
     Retrieve a pickle file from the target GCS bucket and convert to
     DataFrame.
     """
-    path = os.path.join(SOURCE_PATH, path)
+    logger.info()
+    path = '/'.join(SOURCE_PATH, path)
     bucket = client.get_bucket(bucket)
     blob = bucket.blob(path)
     df_io = io.BytesIO()
@@ -43,6 +56,19 @@ def _get_pickle_file(path: str,
     df = pickle.load(df_io)
     df_io.close()
     return df
+
+
+def _store_pickle_file(df: pd.DataFrame,
+                       name: str,
+                       client: storage.Client,
+                       bucket: str) -> None:
+    filename = SUBMISSION_FILES.get(name)
+    path = '/'.join(SOURCE_PATH, SUBMISSION_PATH, filename)
+    bucket = client.get_bucket(bucket)
+    blob = bucket.blob(path)
+    df_io = io.BytesIO()
+    pickle.dump(df, df_io)
+    blob.upload_from_file(df_io)
 
 
 def run_models(policies: pd.DataFrame,
@@ -59,7 +85,11 @@ def run_models(policies: pd.DataFrame,
     # Currently compute both averages and totals.
     averages, totals = get_claim_amounts(policies, grouped)
     counts = get_claim_counts(policies, grouped)
-    evaluate_slm(policies, counts, averages, testing)
+
+    res_slm = evaluate_slm(policies, counts, averages, testing)
+
+    client = storage.Client(project=config['project'])
+    _store_pickle_file(res_slm, 'slm', client, config['bucket'])
 
 
 def main() -> None:
