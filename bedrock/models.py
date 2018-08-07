@@ -15,16 +15,42 @@ def evaluate_slm(independents: pd.DataFrame,
     Fit a simple linear model, evaluate on the testing data and return
     the predictions.
     """
-
+    logger.info('Build frequency model: SLM.')
     freq_model = sm.OLS(counts, independents)
     freq_results = freq_model.fit()
     freq_predictions = freq_results.predict(testing)
     _log_model_results(freq_results, 'slm_freq')
 
+    logger.info('Build severity model: SLM.')
     sev_model = sm.OLS(amounts, independents)
     sev_results = sev_model.fit()
     sev_predictions = sev_results.predict(testing)
     _log_model_results(sev_results, 'slm_sev')
+
+    res = freq_predictions.join(sev_predictions)
+    res.columns = ['E[N]', 'E[X]']
+    return res
+
+
+def evaluate_glm(independents: pd.DataFrame,
+                 counts: pd.DataFrame,
+                 amounts: pd.DataFrame,
+                 testing: pd.DataFrame) -> pd.DataFrame:
+    """
+    Fit a statsmodel GLM using poisson for the frequency and gamma for
+    severity.
+    """
+    logger.info('Build frequency model: GLM.')
+    freq_model = sm.GLM(counts, independents, family=sm.families.Poisson())
+    freq_results = freq_model.fit()
+    freq_predictions = freq_results.predict(testing)
+    _log_model_results(freq_results, 'glm_freq')
+
+    logger.info('Build severity model: GLM.')
+    sev_model = sm.GLM(counts, independents, family=sm.families.Gamma())
+    sev_results = sev_model.fit()
+    sev_predictions = sev_results.predict(testing)
+    _log_model_results(freq_results, 'glm_sev')
 
     res = freq_predictions.join(sev_predictions)
     res.columns = ['E[N]', 'E[X]']

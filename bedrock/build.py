@@ -9,7 +9,7 @@ import pandas as pd
 import pkg_resources
 
 from features import build_features, get_claim_amounts, get_claim_counts
-from models import evaluate_slm
+from models import evaluate_glm, evaluate_slm
 
 CONFIG_PATH = 'config.json'
 
@@ -46,8 +46,8 @@ def _get_pickle_file(path: str,
     Retrieve a pickle file from the target GCS bucket and convert to
     DataFrame.
     """
-    logger.info()
-    path = '/'.join(SOURCE_PATH, path)
+    logger.info(f'Download {path}')
+    path = '/'.join([SOURCE_PATH, path])
     bucket = client.get_bucket(bucket)
     blob = bucket.blob(path)
     df_io = io.BytesIO()
@@ -62,8 +62,9 @@ def _store_pickle_file(df: pd.DataFrame,
                        name: str,
                        client: storage.Client,
                        bucket: str) -> None:
+    logger.info(f'Upload {name}')
     filename = SUBMISSION_FILES.get(name)
-    path = '/'.join(SOURCE_PATH, SUBMISSION_PATH, filename)
+    path = '/'.join([SOURCE_PATH, SUBMISSION_PATH, filename])
     bucket = client.get_bucket(bucket)
     blob = bucket.blob(path)
     df_io = io.BytesIO()
@@ -79,17 +80,21 @@ def run_models(policies: pd.DataFrame,
     With the loaded datasets, run the complete process of model building
     for each of SLM, GLM and MLM.
     """
+    logging.info('Build features.')
     policies = build_features(policies)
     testing = build_features(testing)
     grouped = claims.groupby('pol_id')
+
     # Currently compute both averages and totals.
     averages, totals = get_claim_amounts(policies, grouped)
     counts = get_claim_counts(policies, grouped)
 
     res_slm = evaluate_slm(policies, counts, averages, testing)
+    res_glm = evaluate_glm(policies, counts, averages, testing)
 
     client = storage.Client(project=config['project'])
     _store_pickle_file(res_slm, 'slm', client, config['bucket'])
+    _store_pickle_file(res_glm, 'glm', client, config['bucket'])
 
 
 def main() -> None:

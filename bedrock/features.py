@@ -1,6 +1,9 @@
+import logging
 from typing import Tuple
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def build_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -41,6 +44,7 @@ def get_claim_counts(policies: pd.DataFrame,
     """
     Compute claim count per policy.
     """
+    logger.info('Calculate claim counts.')
     counts = grouped_claims['claim_id'].count()
     counts = policies.join(counts, on='pol_id')
     counts = counts.drop_duplicates('pol_id')['claim_id']
@@ -50,6 +54,7 @@ def get_claim_counts(policies: pd.DataFrame,
 
 def get_claim_amounts(policies: pd.DataFrame,
                       grouped_claims: pd.core.groupby.GroupBy) -> Tuple[pd.Series, pd.Series]:
+    logger.info('Calculate claim amounts')
     totals = grouped_claims['claim_amount'].sum()
     averages = totals / grouped_claims['claim_amount'].count()
 
