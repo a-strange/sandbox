@@ -23,7 +23,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
     # Convert categorical trade column to binary flags.
     df = convert_categorical_column(df, 'trade')
-    df.set_index('pol_id')
+    df.set_index('pol_id', inplace=True)
 
     feature_cols = set(df.columns)
     return df[list(feature_cols.difference(drop_cols))]
@@ -46,8 +46,8 @@ def get_claim_counts(policies: pd.DataFrame,
     """
     logger.info('Calculate claim counts.')
     counts = grouped_claims['claim_id'].count()
-    counts = policies.join(counts, on='pol_id')
-    counts = counts.drop_duplicates('pol_id')['claim_id']
+    counts = policies.join(counts)
+    counts = counts[~counts.index.duplicated(keep=False)]['claim_id']
     counts.fillna(0, inplace=True)
     return counts
 

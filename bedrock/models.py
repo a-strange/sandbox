@@ -16,6 +16,8 @@ def evaluate_slm(independents: pd.DataFrame,
     the predictions.
     """
     logger.info('Build frequency model: SLM.')
+    print(independents.columns, counts.head(), amounts.head())
+
     freq_model = sm.OLS(counts, independents)
     freq_results = freq_model.fit()
     freq_predictions = freq_results.predict(testing)
@@ -27,7 +29,7 @@ def evaluate_slm(independents: pd.DataFrame,
     sev_predictions = sev_results.predict(testing)
     _log_model_results(sev_results, 'slm_sev')
 
-    res = freq_predictions.join(sev_predictions)
+    res = pd.concat([freq_predictions, sev_predictions], axis=1)
     res.columns = ['E[N]', 'E[X]']
     return res
 
@@ -52,7 +54,7 @@ def evaluate_glm(independents: pd.DataFrame,
     sev_predictions = sev_results.predict(testing)
     _log_model_results(freq_results, 'glm_sev')
 
-    res = freq_predictions.join(sev_predictions)
+    res = pd.concat([freq_predictions, sev_predictions], axis=1) 
     res.columns = ['E[N]', 'E[X]']
     return res
 
@@ -62,5 +64,5 @@ def _log_model_results(res: RegressionResults, name: str) -> None:
     Store the results of a model fitting in a log file.
     """
     logger.info(f'Logging results of {name} model.')
-    with open(f'{name}.log', 'r') as f:
-        f.write(res.summary())
+    with open(f'{name}.log', 'w') as f:
+        f.write(res.summary().as_text())

@@ -69,7 +69,9 @@ def _store_pickle_file(df: pd.DataFrame,
     blob = bucket.blob(path)
     df_io = io.BytesIO()
     pickle.dump(df, df_io)
+    df_io.seek(0)
     blob.upload_from_file(df_io)
+    df_io.close()
 
 
 def run_models(policies: pd.DataFrame,
