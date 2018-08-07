@@ -43,16 +43,21 @@ def evaluate_glm(independents: pd.DataFrame,
     severity.
     """
     logger.info('Build frequency model: GLM.')
-    freq_model = sm.GLM(counts, independents, family=sm.families.Poisson())
+    freq_model = sm.GLM(counts,
+                        independents,
+                        family=sm.families.Poisson(sm.families.links.log))
     freq_results = freq_model.fit()
     freq_predictions = freq_results.predict(testing)
     _log_model_results(freq_results, 'glm_freq')
 
+    print(amounts.head())
     logger.info('Build severity model: GLM.')
-    sev_model = sm.GLM(counts, independents, family=sm.families.Gamma())
+    sev_model = sm.GLM(amounts,
+                       independents,
+                       family=sm.families.Gamma(sm.families.links.identity))
     sev_results = sev_model.fit()
     sev_predictions = sev_results.predict(testing)
-    _log_model_results(freq_results, 'glm_sev')
+    _log_model_results(sev_results, 'glm_sev')
 
     res = pd.concat([freq_predictions, sev_predictions], axis=1) 
     res.columns = ['E[N]', 'E[X]']
