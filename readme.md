@@ -32,3 +32,9 @@ python evaluate_submissions.py
 ```
 
 - This will create a file called `SubmissionAnswers.csv`
+
+Example:
+```
+model,scientist,MSE E[N],MSE E[X]
+LM,PaulBassanExample,758.727,1478.6
+```
