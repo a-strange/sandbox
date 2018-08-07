@@ -8,7 +8,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     Given a dataframe of policies, modify and produce the data to form
     the desired set of feature columns.
     """
-    drop_cols = {'insured'}
+    drop_cols = {'insured', 'trade'}
 
     # Convert year variable to int. Formatting year like this was mean.
     df['year_built'] = (df['year_built']
@@ -22,7 +22,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     df = convert_categorical_column(df, 'trade')
 
     feature_cols = set(df.columns)
-    return df[feature_cols.difference(drop_cols)]
+    return df[list(feature_cols.difference(drop_cols))]
 
 
 def convert_categorical_column(df: pd.DataFrame, col: str) -> pd.DataFrame:
@@ -40,11 +40,11 @@ def get_claim_counts(policies: pd.DataFrame,
     """
     Compute claim count per policy.
     """
-    return grouped_claims.count()['claim_id']
-    """
-    counts = policies.join(counts, on='pol_id', r_suffix='_r')['pol_id_r']
-    counts.fillna(0.0)
-    """
+    counts = grouped_claims['claim_id'].count()
+    counts = policies.join(counts, on='pol_id')
+    counts = counts.drop_duplicates('pol_id')['claim_id']
+    counts.fillna(0, inplace=True)
+    return counts
 
 
 def get_claim_amounts(policies: pd.DataFrame,
@@ -52,11 +52,11 @@ def get_claim_amounts(policies: pd.DataFrame,
     totals = grouped_claims['claim_amount'].sum()
     averages = totals / grouped_claims['claim_amount'].count()
 
-    totals = policies.join(totals)
+    totals = policies.join(totals, on='pol_id')
     totals = totals.drop_duplicates('pol_id')['claim_amount']
     totals.fillna(0.0, inplace=True)
 
-    averages = policies.join(averages)
+    averages = policies.join(averages, on='pol_id')
     averages = averages.drop_duplicates('pol_id')['claim_amount']
     averages.fillna(0.0, inplace=True)
 
