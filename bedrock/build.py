@@ -96,6 +96,9 @@ def run_models(policies: pd.DataFrame,
     _store_pickle_file(res_slm, 'slm', client, config['bucket'])
     _store_pickle_file(res_glm, 'glm', client, config['bucket'])
 
+    res_slm.to_csv('slm.csv', encoding='utf-8')
+    res_glm.to_csv('slm.csv', encoding='utf-8')
+
 
 def main() -> None:
     """
