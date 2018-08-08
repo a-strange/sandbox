@@ -21,17 +21,18 @@ Contained in the data folder there are three pickle files:
 - train_claims.pkl - contains a list of fire claims with claim amounts
 - test_policies.pkl - similar to (1) but a test set of policies to be used for submission
 
-- Claim frequencies - claims are modelled as Poisson
-- Claim amounts - log-normally distributed
+Claim frequencies - claims are modelled as Poisson
+
+Claim amounts - log-normally distributed
 
 ## Rating factors
 
 These are supplied along side every policy
 
-Trade
-Year Built
-Sprinklers
-Height of building
+- Trade
+- Year Built
+- Sprinklers
+- Height of building
 
 ## Objectives
 
@@ -76,6 +77,8 @@ Success Metrics for Project Bedrock (draft)
 - Internal level of knowledge of at an individual and collective level should increase.
 
 # Compiling answers
+
+These steps are for the adjudication only. Access to the following folders may be restricted.
 
 ## Processing data
 
