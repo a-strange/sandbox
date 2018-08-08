@@ -105,11 +105,12 @@ def evaluate_mlm(independents: pd.DataFrame,
     freq_results = build_mlm(counts, independents)
     freq_predictions = freq_results.predict(testing)
 
+    logger.info('Build severity model: MLM.')
     sev_results = build_mlm(amounts, independents)
     sev_predictions = sev_results.predict(testing)
 
-    res = pd.np.concat((freq_predictions, sev_predictions), axis=1)
-    return pd.DataFrame(res, coluns=['E[N]', 'E[X]'])
+    res = pd.np.column_stack((freq_predictions, sev_predictions))
+    return pd.DataFrame(res, columns=['E[N]', 'E[X]'])
 
 
 def build_mlm(dep: pd.Series, indep: pd.DataFrame) -> RandomForestRegressor:
