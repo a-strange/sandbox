@@ -49,7 +49,9 @@ Build 3 pricing models which take as inputs: trade, year built, sprinklers, heig
 - Expected number of claims - E[N]
 - Expected severity - E[X]
 
-File for submission: based on the policies in test_policies.pkl, create three pickle files (1 for each model) containing a dataframe with the 3 columns below.
+#### File for submission:
+
+Based on the policies in test_policies.pkl, create three pickle files (1 for each model) containing a dataframe with the 3 columns below.
 
 - The “pol_id”
 - Expected frequency for each policy - labelled as “E[N]”
@@ -57,7 +59,16 @@ File for submission: based on the policies in test_policies.pkl, create three pi
 
 #### Example:
 
-Naming convention for each model file:
+```python
+In [6]: test_policies.head()
+Out[6]:
+    pol_id   E[N]    E[X]
+0       1   0.023  8512.1
+1       2   0.200  2563.5
+2       3   0.090  9845.8
+```
+
+#### Naming convention for each model file:
 
 - [YourName]-LM-01Vanilla
 - [YourName]-GLM-01Vanilla
@@ -65,11 +76,20 @@ Naming convention for each model file:
 
 Upload submission to: https://drive.google.com/drive/folders/1bo3DLmBTn4HjqTG6NMGkLD4L-x201y75 an example submission is in the drive, see file: “PaulBassanExample-LM-01Vanilla.pkl”
 
-Please retain your notebooks, Seb will create a repo for these to go in.
+#### Notebook submissions
+
+```
+git clone git@github.com:cytora/insurance-academy.git
+git checkout -b <your_name>-likes-vanilla-01
+```
+
+- Add notebooks to `/project_bedrock/01_vanilla_universe/notebooks/`
+- Follow similar naming convention: `[YourName]-LM-01Vanilla.ipynb`
+- Open a PR in the repository.
+
+## Success Metrics for Project Bedrock (draft)
 
 There will be a prize for the best ML model…
-
-Success Metrics for Project Bedrock (draft)
 
 - Submission of all three models from every Cytorian involved in modelling work.
 - Grading of risk models produced using mean squared error as the metric
