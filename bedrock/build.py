@@ -94,12 +94,8 @@ def run_models(policies: pd.DataFrame,
 
     model_args = (policies, counts, averages, testing)
 
-    pool = Pool(processes=2)
-    res_slm = pool.apply_async(evaluate_slm, model_args)
-    res_glm = pool.apply_async(evaluate_glm, model_args)
-
-    pool.close()
-    pool.join()
+    res_slm = evaluate_slm(policies, counts, averages, testing)
+    res_glm = evaluate_glm(policies, counts, averages, testing)
 
     client = storage.Client(project=config['project'])
     _store_pickle_file(res_slm, 'slm', client, config['bucket'])

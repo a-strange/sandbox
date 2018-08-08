@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 Results = Union[RegressionResults, GLMResults]
 
 
-def evaluate_slm(wrapped: Tuple[pd.DataFrame,
+def evaluate_slm(independents, counts, amounts, testing: Tuple[pd.DataFrame,
                                 pd.Series,
                                 pd.Series,
                                 pd.DataFrame]) -> pd.DataFrame:
@@ -20,7 +20,7 @@ def evaluate_slm(wrapped: Tuple[pd.DataFrame,
     Fit a simple linear model, evaluate on the testing data and return
     the predictions.
     """
-    independents, counts, amounts, testing = wrapped
+    # independents, counts, amounts, testing = wrapped
     pool = Pool(processes=2)
 
     logger.info('Build frequency model: SLM.')
@@ -29,22 +29,21 @@ def evaluate_slm(wrapped: Tuple[pd.DataFrame,
     logger.info('Build severity model: SLM.')
     sev_results = pool.apply_async(build_slm, (amounts, independents))
 
-    freq_predictions = pool.apply_async(freq_results.predict, testing)
-    sev_predictions = pool.apply_async(sev_results.predict, testing)
+    freq_predictions = pool.apply_async(freq_results.get().predict, [testing])
+    sev_predictions = pool.apply_async(sev_results.get().predict, [testing])
 
     pool.close()
     pool.join()
 
-    _log_model_results(freq_results, 'slm_freq')
-    _log_model_results(sev_results, 'slm_sev')
+    _log_model_results(freq_results.get(), 'slm_freq')
+    _log_model_results(sev_results.get(), 'slm_sev')
 
-    res = pd.concat([freq_predictions, sev_predictions], axis=1)
+    res = pd.concat([freq_predictions.get(), sev_predictions.get()], axis=1)
     res.columns = ['E[N]', 'E[X]']
     return res
 
 
-def build_slm(wrapped: Tuple[pd.Series, pd.DataFrame]) -> RegressionResults:
-    dep, indep = wrapped
+def build_slm(dep:pd.Series, indep: pd.DataFrame) -> RegressionResults:
     model = sm.OLS(dep, indep)
     return model.fit()
 
@@ -63,7 +62,7 @@ def evaluate_glm(independents: pd.DataFrame,
     _log_model_results(freq_results, 'glm_freq')
 
     logger.info('Build severity model: GLM.')
-    sev_results = build_glm_freq(amounts, independents)
+    sev_results = build_glm_sev(amounts, independents)
     sev_predictions = sev_results.predict(testing)
     _log_model_results(sev_results, 'glm_sev')
 
@@ -72,15 +71,13 @@ def evaluate_glm(independents: pd.DataFrame,
     return res
 
 
-def build_glm_freq(wrapped: Tuple[pd.Series, pd.DataFrame]) -> GLMResults:
-    dep, indep = wrapped
+def build_glm_freq(dep:pd.Series, indep: pd.DataFrame) -> GLMResults:
     family = sm.families.Poisson(sm.families.links.log)
     model = sm.GLM(dep, indep, family=family)
     return model.fit()
 
 
-def build_glm_sev(wrapped: Tuple[pd.Series, pd.DataFrame]) -> GLMResults:
-    dep, indep = wrapped
+def build_glm_sev(dep:pd.Series, indep: pd.DataFrame)  -> GLMResults:
     family = sm.families.Gamma(sm.families.links.identity)
     model = sm.GLM(dep, indep, family=family)
     return model.fit()
