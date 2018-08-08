@@ -1,6 +1,6 @@
 import logging
 from multiprocessing import Pool
-from typing import Tuple, Union
+from typing import Union
 
 import pandas as pd
 import statsmodels.api as sm
@@ -109,8 +109,12 @@ def evaluate_mlm(independents: pd.DataFrame,
     sev_results = build_mlm(amounts, independents)
     sev_predictions = sev_results.predict(testing)
 
-    res = pd.np.column_stack((freq_predictions, sev_predictions))
-    return pd.DataFrame(res, columns=['E[N]', 'E[X]'])
+    res = pd.np.column_stack((freq_predictions,
+                              sev_predictions,
+                              testing.pol_id))
+    res = pd.DataFrame(res, coluns=['pol_id', 'E[N]', 'E[X]'])
+    res.set_index('pol_id')
+    return res
 
 
 def build_mlm(dep: pd.Series, indep: pd.DataFrame) -> RandomForestRegressor:
