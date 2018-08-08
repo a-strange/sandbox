@@ -21,15 +21,19 @@ def evaluate_slm(wrapped: Tuple[pd.DataFrame,
     the predictions.
     """
     independents, counts, amounts, testing = wrapped
-    with Pool(processes=2) as pool:
-        logger.info('Build frequency model: SLM.')
-        freq_results = pool.apply_async(build_slm, (counts, independents))
+    pool = Pool(processes=2)
 
-        logger.info('Build severity model: SLM.')
-        sev_results = pool.apply_async(build_slm, (amounts, independents))
+    logger.info('Build frequency model: SLM.')
+    freq_results = pool.apply_async(build_slm, (counts, independents))
 
-        freq_predictions = pool.apply_async(freq_results.predict, testing)
-        sev_predictions = pool.apply_async(sev_results.predict, testing)
+    logger.info('Build severity model: SLM.')
+    sev_results = pool.apply_async(build_slm, (amounts, independents))
+
+    freq_predictions = pool.apply_async(freq_results.predict, testing)
+    sev_predictions = pool.apply_async(sev_results.predict, testing)
+
+    pool.close()
+    pool.join()
 
     _log_model_results(freq_results, 'slm_freq')
     _log_model_results(sev_results, 'slm_sev')
