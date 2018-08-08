@@ -2,6 +2,7 @@ import io
 import json
 import logging
 import pickle
+from multiprocessing import Pool
 from typing import Dict
 
 from google.cloud import storage
@@ -91,8 +92,11 @@ def run_models(policies: pd.DataFrame,
     averages, totals = get_claim_amounts(policies, grouped)
     counts = get_claim_counts(policies, grouped)
 
-    res_slm = evaluate_slm(policies, counts, averages, testing)
-    res_glm = evaluate_glm(policies, counts, averages, testing)
+    model_args = (policies, counts, averages, testing)
+
+    with Pool(processes=2) as pool:
+        res_slm = pool.apply_async(evaluate_slm, model_args)
+        res_glm = pool.apply_async(evaluate_glm, model_args)
 
     client = storage.Client(project=config['project'])
     _store_pickle_file(res_slm, 'slm', client, config['bucket'])
