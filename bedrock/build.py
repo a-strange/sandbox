@@ -2,7 +2,6 @@ import io
 import json
 import logging
 import pickle
-from multiprocessing import Pool
 from typing import Dict
 
 from google.cloud import storage
@@ -10,7 +9,7 @@ import pandas as pd
 import pkg_resources
 
 from features import build_features, get_claim_amounts, get_claim_counts
-from models import evaluate_glm, evaluate_slm
+from models import evaluate_glm, evaluate_mlm, evaluate_slm
 
 CONFIG_PATH = 'config.json'
 
@@ -92,17 +91,18 @@ def run_models(policies: pd.DataFrame,
     averages, totals = get_claim_amounts(policies, grouped)
     counts = get_claim_counts(policies, grouped)
 
-    model_args = (policies, counts, averages, testing)
-
     res_slm = evaluate_slm(policies, counts, averages, testing)
     res_glm = evaluate_glm(policies, counts, averages, testing)
+    res_mlm = evaluate_mlm(policies, counts, averages, testing)
 
     client = storage.Client(project=config['project'])
     _store_pickle_file(res_slm, 'slm', client, config['bucket'])
     _store_pickle_file(res_glm, 'glm', client, config['bucket'])
+    _store_pickle_file(res_mlm, 'mlm', client, config['bucket'])
 
     res_slm.to_csv('slm.csv', encoding='utf-8')
     res_glm.to_csv('glm.csv', encoding='utf-8')
+    res_mlm.to_csv('mlm.csv', encoding='utf-8')
 
 
 def main() -> None:
