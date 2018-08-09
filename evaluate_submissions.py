@@ -47,6 +47,7 @@ for file_name in submissions:
         {
             'model': model,
             'scientist': scientist,
+            # This isn't computing MSE
             'MSE E[N]': sum_e_n - e_n,
             'MSE E[X]': sum_e_x - e_x,
         }
