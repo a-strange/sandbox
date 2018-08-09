@@ -8,7 +8,7 @@ import pandas as pd
 FILE_LOC = 'Submissions'
 ANSWER_FILE = 'test_policies_with_answers.csv'
 BASE_PATTERN = "([a-zA-Z]*)-{}-01Vanilla.pkl"
-MODEL_PATTERN = "-([a-zA-Z]{2})-"
+MODEL_PATTERN = "-([a-zA-Z]{2,3})-"
 
 
 MODELS = ['LM', 'GLM', 'ML']
